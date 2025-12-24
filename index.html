@@ -22,12 +22,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 90%;
-      max-width: 800px;
+      width: 95%;
+      max-width: 1000px;
     }
     iframe {
       width: 100%;
-      height: 480px;
+      max-width: 900px;
+      height: 600px;
       border: 0;
       margin: 10px 0;
     }
@@ -57,7 +58,6 @@
     <iframe id="camFrame" src="https://www.meteology.gr/kamera_tsotyli.html"></iframe>
 
     <div class="weather">
-      <!-- Εδώ μπορεί να βάλεις πρόγνωση καιρού από yr.no ή άλλο API -->
       <h2>Πρόγνωση Καιρού</h2>
       <p>Θερμοκρασία: 0°C</p>
       <p>Άνεμος: 0 km/h</p>
@@ -67,10 +67,12 @@
   </div>
 
   <script>
-    // Auto-refresh της κάμερας κάθε 10 δευτερόλεπτα
+    // Smooth auto-refresh της κάμερας κάθε 10 δευτερόλεπτα
     setInterval(function() {
       var iframe = document.getElementById('camFrame');
-      iframe.src = iframe.src;
+      if (iframe.contentWindow) {
+        iframe.contentWindow.location.reload();
+      }
     }, 10000);
   </script>
 </body>
