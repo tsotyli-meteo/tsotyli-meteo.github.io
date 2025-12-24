@@ -27,8 +27,8 @@
     }
     iframe {
       width: 100%;
-      max-width: 1100px;  /* μεγαλύτερη εικόνα */
-      height: 700px;       /* υψηλότερο iframe */
+      max-width: 1100px;
+      height: 700px;
       border: 0;
       margin: 10px 0;
     }
@@ -56,6 +56,23 @@
       width: 30px;
       height: 30px;
       margin-right: 10px;
+    }
+    .forecast {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+    .forecast-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 5px 10px;
+      font-size: 0.9em;
+    }
+    .forecast-item img {
+      width: 40px;
+      height: 40px;
     }
     @media (min-width: 700px) {
       .container {
@@ -88,6 +105,11 @@
       <div class="weather-item">
         ☁️ <span id="condition">Κατάσταση: ...</span>
       </div>
+
+      <h3>Πρόγνωση επόμενων 6 ωρών</h3>
+      <div class="forecast" id="forecast">
+        <!-- Forecast items θα εμφανιστούν εδώ -->
+      </div>
     </div>
   </div>
 
@@ -100,50 +122,72 @@
       }
     }, 10000);
 
-    // Λήψη δεδομένων καιρού από Open-Meteo
+    // Χάρτης κωδικών καιρού → icon
+    function weatherCodeToIcon(code){
+      if(code === 0) return "https://openweathermap.org/img/wn/01d.png";
+      if(code <= 3) return "https://openweathermap.org/img/wn/03d.png";
+      if(code <= 48) return "https://openweathermap.org/img/wn/50d.png";
+      if(code <= 67) return "https://openweathermap.org/img/wn/09d.png";
+      if(code <= 77) return "https://openweathermap.org/img/wn/13d.png";
+      if(code <= 99) return "https://openweathermap.org/img/wn/11d.png";
+      return "https://openweathermap.org/img/wn/01d.png";
+    }
+
+    function weatherCodeToText(code){
+      if(code === 0) return "Καθαρός ουρανός";
+      if(code <= 3) return "Συννεφιά";
+      if(code <= 48) return "Ομίχλη";
+      if(code <= 67) return "Βροχή/Χιονόνερο";
+      if(code <= 77) return "Χιόνι";
+      if(code <= 99) return "Καταιγίδα";
+      return "Άγνωστο";
+    }
+
     async function getWeather() {
-      const lat = 40.3933;   // Τσοτύλι
+      const lat = 40.3933;
       const lon = 21.8375;
 
       try {
-        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+        // Τρέχον καιρός
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m`);
         const data = await response.json();
         const weather = data.current_weather;
 
         document.getElementById("temp").textContent = `Θερμοκρασία: ${weather.temperature}°C`;
         document.getElementById("wind").textContent = `Άνεμος: ${weather.windspeed} km/h`;
-
-        // Υγρασία αν υπάρχει
         if(weather.relativehumidity !== undefined){
           document.getElementById("humidity").textContent = `Υγρασία: ${weather.relativehumidity}%`;
         } else {
           document.getElementById("humidity").textContent = `Υγρασία: -`;
         }
+        document.getElementById("condition").textContent = `Κατάσταση: ${weatherCodeToText(weather.weathercode)}`;
+        document.getElementById("icon").src = weatherCodeToIcon(weather.weathercode);
 
-        // Κατάσταση καιρού βασισμένη σε κωδικό
-        const weatherCode = weather.weathercode;
-        let conditionText = "Άγνωστο";
-        let iconUrl = "https://openweathermap.org/img/wn/01d.png"; // default
+        // Πρόγνωση επόμενων 6 ωρών
+        const now = new Date();
+        const forecastContainer = document.getElementById("forecast");
+        forecastContainer.innerHTML = "";
+        for(let i=0; i<6; i++){
+          const hourData = data.hourly;
+          const timeISO = hourData.time[i];
+          const temp = hourData.temperature_2m[i];
+          const code = hourData.weathercode[i];
+          const hour = new Date(timeISO).getHours();
 
-        if(weatherCode === 0) { conditionText = "Καθαρός ουρανός"; iconUrl = "https://openweathermap.org/img/wn/01d.png"; }
-        else if(weatherCode <= 3) { conditionText = "Συννεφιά"; iconUrl = "https://openweathermap.org/img/wn/03d.png"; }
-        else if(weatherCode <= 48) { conditionText = "Ομίχλη"; iconUrl = "https://openweathermap.org/img/wn/50d.png"; }
-        else if(weatherCode <= 67) { conditionText = "Βροχή/Χιονόνερο"; iconUrl = "https://openweathermap.org/img/wn/09d.png"; }
-        else if(weatherCode <= 77) { conditionText = "Χιόνι"; iconUrl = "https://openweathermap.org/img/wn/13d.png"; }
-        else if(weatherCode <= 99) { conditionText = "Καταιγίδα"; iconUrl = "https://openweathermap.org/img/wn/11d.png"; }
-
-        document.getElementById("condition").textContent = `Κατάσταση: ${conditionText}`;
-        document.getElementById("icon").src = iconUrl;
+          const item = document.createElement("div");
+          item.className = "forecast-item";
+          item.innerHTML = `<div>${hour}:00</div><img src="${weatherCodeToIcon(code)}" alt="icon"><div>${temp}°C</div>`;
+          forecastContainer.appendChild(item);
+        }
 
       } catch (err) {
         console.error("Σφάλμα κατά την ανάκτηση δεδομένων καιρού:", err);
       }
     }
 
-    // Φόρτωμα κατά το άνοιγμα
     getWeather();
-    // Auto-refresh κάθε 10 λεπτά
-    setInterval(getWeather, 600000);
+    setInterval(getWeather, 600000); // κάθε 10 λεπτά
   </script>
 </body>
 </html>
+
