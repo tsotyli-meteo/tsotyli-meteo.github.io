@@ -57,23 +57,48 @@
   <div class="container">
     <iframe id="camFrame" src="https://www.meteology.gr/kamera_tsotyli.html"></iframe>
 
-    <div class="weather">
-      <h2>Πρόγνωση Καιρού</h2>
-      <p>Θερμοκρασία: 0°C</p>
-      <p>Άνεμος: 0 km/h</p>
-      <p>Υγρασία: 0%</p>
-      <p>Κατάσταση: Συννεφιά</p>
+    <div class="weather" id="weather">
+      <h2>Πρόγνωση Καιρού Τσοτυλίου</h2>
+      <p id="temp">Θερμοκρασία: ...°C</p>
+      <p id="wind">Άνεμος: ... km/h</p>
+      <p id="humidity">Υγρασία: ...%</p>
     </div>
   </div>
 
   <script>
-    // Smooth auto-refresh της κάμερας κάθε 10 δευτερόλεπτα
+    // Smooth auto-refresh κάμερας κάθε 10 δευτερόλεπτα
     setInterval(function() {
       var iframe = document.getElementById('camFrame');
       if (iframe.contentWindow) {
         iframe.contentWindow.location.reload();
       }
     }, 10000);
+
+    // Λήψη δεδομένων καιρού από Open-Meteo
+    async function getWeather() {
+      const lat = 40.3933;   // Τσοτύλι
+      const lon = 21.8375;
+
+      try {
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+        const data = await response.json();
+        const weather = data.current_weather;
+
+        document.getElementById("temp").textContent = `Θερμοκρασία: ${weather.temperature}°C`;
+        document.getElementById("wind").textContent = `Άνεμος: ${weather.windspeed} km/h`;
+        // Το Open-Meteo δεν δίνει πάντα υγρασία, αν υπάρχει:
+        if(weather.relativehumidity !== undefined){
+          document.getElementById("humidity").textContent = `Υγρασία: ${weather.relativehumidity}%`;
+        }
+      } catch (err) {
+        console.error("Σφάλμα κατά την ανάκτηση δεδομένων καιρού:", err);
+      }
+    }
+
+    // Φόρτωμα κατά το άνοιγμα
+    getWeather();
+    // Auto-refresh κάθε 10 λεπτά
+    setInterval(getWeather, 600000);
   </script>
 </body>
 </html>
