@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Τσοτύλι – Κάμερα & Καιρός</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef2f5;
+            margin: 0;
+            padding: 10px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .box {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>📷 Τσοτύλι – Ζωντανή Κάμερα & 🌦️ Καιρός</h1>
+
+<div class="container">
+
+    <!-- ΚΑΜΕΡΑ -->
+    <div class="box">
+        <h2>Ζωντανή εικόνα</h2>
+        <iframe src="https://www.meteology.gr/kamera_tsotyli.html"></iframe>
+    </div>
+
+    <!-- ΚΑΙΡΟΣ YR.NO -->
+    <div class="box">
+        <h2>Πρόγνωση Καιρού</h2>
+        <iframe 
+            src="https://www.yr.no/en/content/2-734077"
+            height="400">
+        </iframe>
+    </div>
+
+</div>
+
+</body>
+</html>
