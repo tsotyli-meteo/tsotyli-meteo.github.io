@@ -23,25 +23,41 @@
       flex-direction: column;
       align-items: center;
       width: 95%;
-      max-width: 1000px;
+      max-width: 1200px;
     }
     iframe {
       width: 100%;
-      max-width: 900px;
-      height: 600px;
+      max-width: 1100px;  /* μεγαλύτερη εικόνα */
+      height: 700px;       /* υψηλότερο iframe */
       border: 0;
       margin: 10px 0;
     }
     .weather {
       width: 100%;
-      text-align: center;
       background-color: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
       margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    @media (min-width: 600px) {
+    .weather h2 {
+      margin-bottom: 15px;
+    }
+    .weather-item {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+      font-size: 1.1em;
+    }
+    .weather-item img {
+      width: 30px;
+      height: 30px;
+      margin-right: 10px;
+    }
+    @media (min-width: 700px) {
       .container {
         flex-direction: row;
         justify-content: space-between;
@@ -58,10 +74,20 @@
     <iframe id="camFrame" src="https://www.meteology.gr/kamera_tsotyli.html"></iframe>
 
     <div class="weather" id="weather">
-      <h2>Πρόγνωση Καιρού Τσοτυλίου</h2>
-      <p id="temp">Θερμοκρασία: ...°C</p>
-      <p id="wind">Άνεμος: ... km/h</p>
-      <p id="humidity">Υγρασία: ...%</p>
+      <h2>Live Καιρός Τσοτυλίου</h2>
+      <div class="weather-item">
+        <img src="https://openweathermap.org/img/wn/01d.png" id="icon" alt="Weather Icon">
+        <span id="temp">Θερμοκρασία: ...°C</span>
+      </div>
+      <div class="weather-item">
+        🌬️ <span id="wind">Άνεμος: ... km/h</span>
+      </div>
+      <div class="weather-item">
+        💧 <span id="humidity">Υγρασία: ...%</span>
+      </div>
+      <div class="weather-item">
+        ☁️ <span id="condition">Κατάσταση: ...</span>
+      </div>
     </div>
   </div>
 
@@ -86,10 +112,29 @@
 
         document.getElementById("temp").textContent = `Θερμοκρασία: ${weather.temperature}°C`;
         document.getElementById("wind").textContent = `Άνεμος: ${weather.windspeed} km/h`;
-        // Το Open-Meteo δεν δίνει πάντα υγρασία, αν υπάρχει:
+
+        // Υγρασία αν υπάρχει
         if(weather.relativehumidity !== undefined){
           document.getElementById("humidity").textContent = `Υγρασία: ${weather.relativehumidity}%`;
+        } else {
+          document.getElementById("humidity").textContent = `Υγρασία: -`;
         }
+
+        // Κατάσταση καιρού βασισμένη σε κωδικό
+        const weatherCode = weather.weathercode;
+        let conditionText = "Άγνωστο";
+        let iconUrl = "https://openweathermap.org/img/wn/01d.png"; // default
+
+        if(weatherCode === 0) { conditionText = "Καθαρός ουρανός"; iconUrl = "https://openweathermap.org/img/wn/01d.png"; }
+        else if(weatherCode <= 3) { conditionText = "Συννεφιά"; iconUrl = "https://openweathermap.org/img/wn/03d.png"; }
+        else if(weatherCode <= 48) { conditionText = "Ομίχλη"; iconUrl = "https://openweathermap.org/img/wn/50d.png"; }
+        else if(weatherCode <= 67) { conditionText = "Βροχή/Χιονόνερο"; iconUrl = "https://openweathermap.org/img/wn/09d.png"; }
+        else if(weatherCode <= 77) { conditionText = "Χιόνι"; iconUrl = "https://openweathermap.org/img/wn/13d.png"; }
+        else if(weatherCode <= 99) { conditionText = "Καταιγίδα"; iconUrl = "https://openweathermap.org/img/wn/11d.png"; }
+
+        document.getElementById("condition").textContent = `Κατάσταση: ${conditionText}`;
+        document.getElementById("icon").src = iconUrl;
+
       } catch (err) {
         console.error("Σφάλμα κατά την ανάκτηση δεδομένων καιρού:", err);
       }
