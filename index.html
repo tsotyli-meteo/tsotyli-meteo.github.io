@@ -72,4 +72,77 @@
     <div class="weather" id="weather">
       <h2>Live Καιρός Τσοτυλίου</h2>
       <div class="weather-item"><i id="icon" class="wi wi-day-sunny"></i><span id="temp">Θερμοκρασία: ...°C</span></div>
-      <div class="weather-item"><i class="wi wi-strong-wind"></i><span id="wind">Άνεμος: ... km/h<
+      <div class="weather-item"><i class="wi wi-strong-wind"></i><span id="wind">Άνεμος: ... km/h</span></div>
+      <div class="weather-item"><i class="wi wi-humidity"></i><span id="humidity">Υγρασία: ...%</span></div>
+      <div class="weather-item"><i class="wi wi-cloud"></i><span id="condition">Κατάσταση: ...</span></div>
+
+      <h3>Πρόγνωση επόμενων 6 ωρών</h3>
+      <div class="forecast" id="forecast"></div>
+    </div>
+  </div>
+
+  <script>
+    // Smooth auto-refresh κάμερας κάθε 10 δευτ.
+    setInterval(() => {
+      const iframe = document.getElementById('camFrame');
+      if(iframe.contentWindow){ iframe.contentWindow.location.reload(); }
+    }, 10000);
+
+    // Map weather code -> Weather Icons class
+    function weatherCodeToClass(code){
+      if(code === 0) return "wi-day-sunny";
+      if(code <= 3) return "wi-day-cloudy";
+      if(code <= 48) return "wi-fog";
+      if(code <= 67) return "wi-rain";
+      if(code <= 77) return "wi-snow";
+      if(code <= 99) return "wi-thunderstorm";
+      return "wi-day-sunny";
+    }
+
+    function weatherCodeToText(code){
+      if(code === 0) return "Καθαρός ουρανός";
+      if(code <= 3) return "Συννεφιά";
+      if(code <= 48) return "Ομίχλη";
+      if(code <= 67) return "Βροχή/Χιονόνερο";
+      if(code <= 77) return "Χιόνι";
+      if(code <= 99) return "Καταιγίδα";
+      return "Άγνωστο";
+    }
+
+    async function getWeather() {
+      const lat = 40.3933, lon = 21.8375;
+      try {
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m`);
+        const data = await response.json();
+        const weather = data.current_weather;
+
+        document.getElementById("temp").textContent = `Θερμοκρασία: ${weather.temperature}°C`;
+        document.getElementById("wind").textContent = `Άνεμος: ${weather.windspeed} km/h`;
+        document.getElementById("humidity").textContent = weather.relativehumidity !== undefined ? `Υγρασία: ${weather.relativehumidity}%` : `Υγρασία: -`;
+        document.getElementById("condition").textContent = `Κατάσταση: ${weatherCodeToText(weather.weathercode)}`;
+        const iconEl = document.getElementById("icon");
+        iconEl.className = "wi " + weatherCodeToClass(weather.weathercode);
+
+        // Πρόγνωση επόμενων 6 ωρών
+        const forecastContainer = document.getElementById("forecast");
+        forecastContainer.innerHTML = "";
+        const hours = data.hourly.time.slice(0,6);
+        const temps = data.hourly.temperature_2m.slice(0,6);
+        const codes = data.hourly.weathercode.slice(0,6);
+
+        for(let i=0; i<6; i++){
+          const hour = new Date(hours[i]).getHours();
+          const item = document.createElement("div");
+          item.className = "forecast-item";
+          item.innerHTML = `<div>${hour}:00</div><i class="wi ${weatherCodeToClass(codes[i])}"></i><div>${temps[i]}°C</div>`;
+          forecastContainer.appendChild(item);
+        }
+
+      } catch(err){ console.error("Σφάλμα στην ανάκτηση δεδομένων:", err); }
+    }
+
+    getWeather();
+    setInterval(getWeather, 600000); // κάθε 10 λεπτά
+  </script>
+</body>
+</html>
